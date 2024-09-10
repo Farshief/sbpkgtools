@@ -1,0 +1,8 @@
+name: vim
+version: 9.1.0041
+source: https://github.com/vim/vim/archive/v9.1.0041/vim-9.1.0041.tar.gz
+md5: 79dfe62be5d347b1325cbd5ce2a1f9b3
+postinstall: true
+mkdeps:
+rtdeps:
+extras:

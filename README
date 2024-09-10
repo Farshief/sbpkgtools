@@ -1,0 +1,15 @@
+# SBPkgTools
+Simple Bash Package Management Tools (Designed for LFS)
+
+
+# Intro/About Me
+Let me start by saying that I've dabbled in coding enough to know my way around. By no means do I consider myself accomplished or experienced.
+
+I enjoy learning new things as my main hobby and so I've dabbled with Linux From Scratch (LFS) over the years. As part of that project I quickly realized early on into BLFS that having no package management was probably not a great idea. I looked at several existing managers and how to make them work for LFS.
+
+Then, after messing around with Slackware's package tools a bit I decided what better way to learn than to try my hand at making my own. I don't know any C although I'm familiar enough to read through some source but Bash scripts are easy enough and Google is my friend so here I am.
+
+# The Gist
+The way I want these scripts to eventually work is to be able to run a command (probably sbpkg) with -m, -i, -r, -s, -u options to make, install, remove, search, upgrade, etc packages based off simple build scripts and keep up with which packages are installed with Sqlite. I haven't decided on dependency resolution yet but it's not a priority for now anyway as much as getting a working system together.
+
+I did find other build script/Fakeroot solutions designed for LFS but they were years old and the LFS system style and book progression has changed since then which was another factor in deciding to try this.

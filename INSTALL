@@ -1,0 +1,27 @@
+#!/bin/bash
+
+PkgToolsInstallVer=1.0
+#####################
+##################### SBPkgTools Install Script
+##################### Written by Farshief
+##################### Run this script initially to install
+##################### directory structure, create DB and
+##################### move tools to selected bin directory
+#####################
+
+# Variable Definitions - Modify the variables below to change the appropriate locations
+packagesDir=/packages # The base directory to hold your repo, build scripts and DB file
+pkgbuildpath=$packagesDir/build # The Build Script base directory
+pkglogs=$pkgbuildpath/logs
+REPO_core=$packagesDir/repo/core # The repo directory (holds finished packages)
+binDir=/usr/bin
+
+# Create Directories
+mkdir -pv $pkglogs
+mkdir -pv $REPO_core/{a,b,c,d,e,f,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z}
+
+# Create DB file
+cat ./scripts/dbcreate.sql | sqlite3 /packages/packages.db
+
+# install files to binDir
+

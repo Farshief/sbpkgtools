@@ -1,0 +1,208 @@
+#!/bin/bash
+
+PkgToolsMakeVer=1.0
+#####################
+##################### SBPkgTools Make Script
+##################### Written by Farshief
+#####################
+
+# Variable Definitions
+packagesDir=/packages
+pkgbuildpath=$packagesDir/build
+pkglogs=$pkgbuildpath/logs
+REPO_core=$packagesDir/repo/core
+Toolname="SBPkgTools"
+
+{										# Open bracket for logging
+# Function Definitions
+function parse_yaml { 								# YAML Parsing
+   local prefix=$2								# Function by Stefan Farestam as found here: https://stackoverflow.com/a/21189044
+   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+   sed -ne "s|^\($s\):|\1|" \
+        -e "s|^\($s\)\($w\)$s:$s[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p" \
+        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
+   awk -F$fs '{
+      indent = length($1)/2;
+      vname[indent] = $2;
+      for (i in vname) {if (i > indent) {delete vname[i]}}
+      if (length($3) > 0) {
+         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+         printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
+      }
+   }'
+}
+
+clear
+
+echo "*******"
+echo "***$Toolname Make Script V-$PkgToolsMakeVer"
+echo "*******"
+echo
+
+# Param Handling
+if [ $# -gt 1 ] || [ $# -lt 1 ]										# If there is the wrong number of args
+then
+	echo "Invalid Command"
+	echo "Syntax is sbpkgmake <package name>"
+	exit 1
+else													# If exactly 1 arg was provided
+	packagename=$(find $pkgbuildpath -type d -name "$1*" -printf "%f\n")				# Look for the package in the build path
+	if [[ -z $packagename ]]									# If no package was found
+	then
+		echo "No packages found matching '$1' in $pkgbuildpath"
+	else												# If one or more packages were discovered
+		echo "Found the following packages:"
+		count=1
+		for i in $packagename									# Iterate through the packages and list them
+		do
+			echo "$count) $i"
+			((count=count+1))
+			packages+=($i)
+		done
+
+		((pkgcount=count-1))									# Set pkgcount number (The available packages found)
+		unset count
+
+		read -p "Please make a selection: " selection						# Prompt for user selection
+
+		if [[ "$selection" =~ ^[0-9]+$ && "$selection" -gt 0 && "$selection" -le $pkgcount ]]	# If the selection is only a number, and in valid range
+		then
+			((selection=selection-1))							# Adjust selection because arrays start counting from 0
+			echo
+			echo "${packages[$selection]} Selected"
+			pkgselection=${packages[$selection]}						# Set pkgselection (The actual name of the package selected)
+		else
+			echo "Invalid Selection"
+			exit 1
+		fi
+	fi
+fi
+
+# Variable Definitions
+pkgconf="$pkgbuildpath/$pkgselection"									# Package Folder
+FAKEROOT="$pkgconf/src"
+scripts="$pkgconf/scripts"
+
+echo
+echo "*******"
+echo "***$Toolname: Folder Located: $pkgconf"
+echo "*******"
+echo
+
+eval $(parse_yaml "$pkgconf/PKG" "PKGTOOLS_")								# Parse PKG file											# Set FAKEROOT (src) Directory
+
+# Package name is $PKGTOOLS_name
+# Version is $PKGTOOLS_version
+# Source is $PKGTOOLS_source
+# md5 is $PKGTOOLS_md5
+# Extras are in $PKGTOOLS_extras
+
+wget $PKGTOOLS_source -P $FAKEROOT									# Get source tarball
+
+if [[ -n $PKGTOOLS_extra ]]										# Check for extras (patches)
+then
+	wget $PKGTOOLS_extra -P $FAKEROOT								# Get extras
+fi
+
+# Check md5sum here
+
+echo
+echo "*******"
+echo "***$Toolname: Checking md5sum in $FAKEROOT"
+echo "*******"
+echo
+
+md5=($(md5sum $FAKEROOT/$pkgselection*))								# Get source md5
+if [ $md5 = $PKGTOOLS_md5 ]										# See if it matches the expected md5 checksum
+then
+	echo "*******"
+	echo "***$Toolname: File - ${md5[1]} - $md5: Result OK!"
+	echo "*******"
+	echo
+else
+	echo "*******"
+	echo "***$Toolname: Fatal Error: md5 does not match."
+	echo "***$Toolname: Fatal Error: File: ${md5[1]}. Exepected Checksum: $PKGTOOLS_md5. Actual Checksum: $md5"
+	echo "***$Toolname: Fatal Error: Exiting"
+	echo "*******"
+	exit 1												# If it doesn't match then exit the script
+fi
+
+# Extract
+echo
+echo "*******"
+echo "***$Toolname: Extracting $FAKEROOT/$pkgselection"
+echo "*******"
+echo
+
+tar -xf $FAKEROOT/$pkgselection* -C $FAKEROOT								# Extract the source tar
+
+# Run .build
+
+echo
+echo "*******"
+echo "***$Toolname: Running buildscript $pkfconf/scripts/BUILD"
+echo "*******"
+echo
+
+
+pushd $FAKEROOT/$pkgselection										# Change to the extracted package folder
+source $scripts/BUILD										# Run the Build Script
+popd													# Jump back to the original directory
+
+# Remove source tar and files
+
+echo
+echo "*******"
+echo "***$Toolname: Removing source tar and build directory"
+echo "*******"
+echo
+
+rm -rf $FAKEROOT/$pkgselection*										# Removes src tar and src build directory, leaving only the fakeroot installation
+
+### File Maintenance
+### Perform any other modifications here
+
+# Compress files to be installed
+
+echo
+echo "*******"
+echo "***$Toolname: Compressing Built Package"
+echo "*******"
+echo
+
+pushd $FAKEROOT												# Change to the src directory
+
+filelist=$pkgbuildpath/$pkgselection/filelist
+installsize=$pkgbuildpath/$pkgselection/installsize
+tar -zvcf $pkgselection.files ./* | awk -F/ '{ if($NF != "") print $0 }' | cut -c2- > $filelist		# Create .files tar
+
+mv $pkgselection.files ..										# Move packaged files up one directory
+
+du -bsh $FAKEROOT | cut -f -1 > $installsize									# Print size of files to be installed
+
+rm -rf $FAKEROOT/*											# Remove files in src directory
+popd													# Return to the original directory
+
+pushd $pkgbuildpath											# Go to the build directory
+tar -zvcf $pkgselection.pkg ./$pkgselection								# Package the entire package
+
+rm -rf ./$pkgselection/$pkgselection.files 								# Remove .files after compression
+rm -rf ./$pkgselection/filelist										# Remove filelist after compression
+rm -rf ./$pkgselection/installsize
+
+# Relocate files to proper place
+
+echo
+echo "*******"
+echo "***$Toolname: Moving Package Archive to Core Repo"
+echo "*******"
+echo
+
+firstletter=${pkgselection:0:1}										# Get the first letter of the package name (for repo sorting)
+mv -vf $pkgselection.pkg $REPO_core/$firstletter							# Move .pkg file to the appropriate repo folder replacing any existing package
+
+popd													# Return to the original directory
+
+mv $pkglogs/make.log $pkglogs/$pkgselection-make.log
+} 2>&1 | tee $pkglogs/make.log										# Ending bracket for logging

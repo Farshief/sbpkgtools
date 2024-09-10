@@ -1,0 +1,195 @@
+#!/bin/bash
+
+PkgToolsInstallVer=1.01
+#####################
+##################### SBPkgTools Install Script V1.01
+##################### Written by Farshief
+#####################
+
+# Variable Definitions
+packagesDir=/packages
+pkgbuildpath=$packagesDir/build
+pkglogs=$pkgbuildpath/logs
+REPO_core=$packagesDir/repo/core
+DBpath=$packagesDir/packages.db
+Toolname="SBPkgTools"
+
+{											# Open Bracket for Logging
+
+# Function Definitions
+function parse_yaml { 									# YAML Parsing
+   local prefix=$2									# Function by Stefan Farestam as posted here: https://stackoverflow.com/a/21189044
+   local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
+   sed -ne "s|^\($s\):|\1|" \
+        -e "s|^\($s\)\($w\)$s:$s[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p" \
+        -e "s|^\($s\)\($w\)$s:$s\(.*\)$s\$|\1$fs\2$fs\3|p"  $1 |
+   awk -F$fs '{
+      indent = length($1)/2;
+      vname[indent] = $2;
+      for (i in vname) {if (i > indent) {delete vname[i]}}
+      if (length($3) > 0) {
+         vn=""; for (i=0; i<indent; i++) {vn=(vn)(vname[i])("_")}
+         printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
+      }
+   }'
+}
+
+clear
+
+echo "*******"
+echo "***$Toolname Install Script V-$PkgToolsInstallVer"
+echo "*******"
+echo
+
+# Find Package
+
+# Param Handling
+if [ $# -gt 1 ] || [ $# -lt 1 ]											# If there is the wrong number of args
+then
+	echo "*******"
+	echo "***$Toolname: Invalid Command"
+	echo "***$Toolname: Syntax is sbpkginstall <package name>"
+	echo "*******"
+	echo
+	exit 1
+else														# If exactly 1 arg was provided
+	firstletter=${1:0:1}											# Get the first letter of the package name
+	repopath=$REPO_core/$firstletter
+
+	packagename=$(find $repopath -type f -name "$1*" -printf "%f\n")					# Look for the package in the build path
+	if [[ -z $packagename ]]										# If no package was found
+	then
+		echo "No packages found matching '$1' in $REPO_core"
+		echo "Please build package before attempting to install"
+		exit 1
+	else													# If one or more packages were discovered
+		echo "Found the following packages:"
+		count=1
+		for i in $packagename										# Iterate through the packages and list them
+		do
+			echo "$count) $i"
+			((count=count+1))
+			packages+=($i)
+		done
+
+		((pkgcount=count-1))										# Set pkgcount number (The available packages found)
+		unset count
+
+		read -n 2 -p "Please make a selection: " selection						# Prompt for user selection
+
+		if [[ "$selection" =~ ^[0-9]+$ && "$selection" -gt 0 && "$selection" -le $pkgcount ]]		# If the selection is only a number, and in valid range
+		then
+			((selection=selection-1))								# Adjust selection because arrays start counting from 0
+			echo
+			pkgselectionfile=${packages[$selection]}						# Set pkgselectionfile (The actual file name of the package selected)
+			pkgselection=$(sed "s/\.pkg//" <<< $pkgselectionfile)					# Set pkgselection (The file name without the extension .pkg)
+			echo "$pkgselection Selected"								# The pipe into sed removes the .pkg extension when displaying
+		else
+			echo "Invalid Selection"
+			exit 1
+		fi
+	fi
+fi
+
+scripts=$repopath/$pkgselection/scripts
+
+echo $repopath
+echo $pkgselection
+
+# Check for existing installation
+
+result=$(sqlite3 $DBpath "SELECT * FROM packages WHERE name='$1';")
+
+if [[ -n $result ]]
+then
+	IFS='|' read -ra DBResult <<< "$result"
+
+	pkgname=${DBResult[0]}
+	pkgver=${DBResult[1]}
+
+	echo
+	echo "*******"
+	echo "***$Toolname: $pkgname is already installed"
+	echo "***$Toolname: Version: $pkgver"
+	echo "***$Toolname: If you wish to proceed, please remove existing installation first"
+	echo "***$Toolname: This message will update when sbpkgupgrade is implemented"
+	echo "***$Toolname: Exiting"
+	echo "*******"
+	echo	
+
+	exit 1
+fi
+
+# Extract package
+
+pushd $repopath													# Temporarily enter the repo
+
+echo
+echo "*******"
+echo "***$Toolname: Opening Package: $pkgselectionfile"
+echo "*******"
+echo
+
+tar -xf $repopath/$pkgselectionfile										# Extract package files
+cd ./$pkgselection												# Enter package directory
+
+installsize=$(< $repopath/$pkgselection/installsize)								# Get install size of files to be installed
+
+eval $(parse_yaml "$repopath/$pkgselection/PKG" "PKGTOOLS_")							# Parse PKG file
+# Package name is $PKGTOOLS_name
+# Version is $PKGTOOLS_version
+# Source is $PKGTOOLS_source
+# md5 is $PKGTOOLS_md5
+# Extras are in $PKGTOOLS_extras
+
+echo
+echo "*******"
+echo "***$Toolname: About to install package $pkgselection"
+echo "*******"
+echo
+
+echo
+echo "*******"
+echo "***$Toolname: Installation will use approximately $installsize"
+echo "*******"
+echo
+
+echo
+echo "*******"
+echo "***$Toolname: Are you sure you wish to proceed?"
+echo "*******"
+echo
+
+read -p "[Y/n]: " key												# Give the user a final chance to back out
+
+key=${key,,}													# Convert input to lowercase
+if [ "$key" != "y" ] && [ "$key" != "yes" ] && [ "$key" != "" ]							# If key is anything other than y|yes|<Enter>
+then
+	echo "Installation Halted"
+	echo
+	echo "*******"
+	echo "***$Toolname: Cleaning up and exiting"
+	echo "*******"
+	echo
+
+	rm -rf $repopath/$pkgselection										# Remove extracted package files
+	exit 1
+fi
+
+sudo tar -xf ./$pkselection.files -C /										# Install package files to system
+
+popd														# Return to the original directory
+
+if [ "$PKGTOOLS_postinstall" = "true" ]
+then
+	sudo source $scripts/POSTINSTALL							# Run POSTINSTALL script
+	echo
+fi
+
+sqlite3 $DBpath "INSERT INTO packages (name, version) VALUES ('$PKGTOOLS_name', '$PKGTOOLS_version');"		# Update Packages DB
+
+rm -rf $repopath/$pkgselection											# Remove tmp files
+
+mv $pkglogs/install.log $pkglogs/$pkgselection-install.log
+
+} 2>&1 | tee $pkglogs/install.log										# Ending bracket for logging
