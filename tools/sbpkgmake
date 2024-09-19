@@ -50,6 +50,7 @@ else													# If exactly 1 arg was provided
 	if [[ -z $packagename ]]									# If no package was found
 	then
 		echo "No packages found matching '$1' in $pkgbuildpath"
+		exit 1
 	else												# If one or more packages were discovered
 		echo "Found the following packages:"
 		count=1

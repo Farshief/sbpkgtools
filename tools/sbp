@@ -35,7 +35,7 @@ function parse_yaml {
 }
 
 ## SBOut script - To print messages to the user in a standardized format
-function sbout {
+function sbout () {
    local message=$1
    echo
    echo "*******"
@@ -46,16 +46,17 @@ function sbout {
 
 ## Make Script
 function sbpmake {
-   echo
+   echo "."
+}
 
 ## Install Script
 function sbpinstall {
-   echo
+   echo "."
 }
 
 ## Remove Script
 function sbpremove {
-   echo
+   echo ":"
 }
 
 ### Actual Start of the User Interactive Script
