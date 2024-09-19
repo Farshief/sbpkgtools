@@ -5,8 +5,10 @@
 
 
 ### Function Definitions
-function parse_yaml { 									# YAML Parsing
-   local prefix=$2                                      # Function by Stefan Farestam as posted here: https://stackoverflow.com/a/21189044
+## YAML Parsing
+## Function by Stefan Farestam as posted here: https://stackoverflow.com/a/21189044
+function parse_yaml {
+   local prefix=$2
    local s='[[:space:]]*' w='[a-zA-Z0-9_]*' fs=$(echo @|tr @ '\034')
    sed -ne "s|^\($s\):|\1|" \
         -e "s|^\($s\)\($w\)$s:$s[\"']\(.*\)[\"']$s\$|\1$fs\2$fs\3|p" \
@@ -20,4 +22,19 @@ function parse_yaml { 									# YAML Parsing
          printf("%s%s%s=\"%s\"\n", "'$prefix'",vn, $2, $3);
       }
    }'
+}
+
+## Make Script
+function sbpmake {
+
+}
+
+## Install Script
+function sbpinstall {
+
+}
+
+## Remove Script
+function sbpremove {
+
 }
