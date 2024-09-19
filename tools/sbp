@@ -35,13 +35,31 @@ function parse_yaml {
 }
 
 ## SBOut script - To print messages to the user in a standardized format
-function sbout () {
+function sbout {
    local message=$1
    echo
    echo "*******"
    echo "***$Toolname: $message"
    echo "*******"
    echo
+}
+
+## ParamHandling - handle parameters and call the appropriate function
+function handleparams {
+   while getopts ":mirh:" option; do
+   case $option in
+      h) # display Help
+         echo "help page function"
+         exit
+	 ;;
+      m) # Make Script
+         sbpmake $1
+     \?) # Invalid option
+         echo "Error: Invalid option"
+         exit
+	 ;;
+   esac
+done
 }
 
 ## Make Script
@@ -64,3 +82,6 @@ function sbpremove {
 clear
 
 sbout "Package Management Scripts-V$SBPVer"
+
+
+handleparams $1
