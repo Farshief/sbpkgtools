@@ -7,7 +7,7 @@
 #####################
 
 ### Variable Definitions
-SBPVer=1.0.0
+SBPVer=1.0.1
 packagesDir=/packages
 pkgbuildpath=$packagesDir/build
 pkglogs=$pkgbuildpath/logs
@@ -46,17 +46,16 @@ function sbout {
 
 ## Make Script
 function sbpmake {
-
-}
+   echo
 
 ## Install Script
 function sbpinstall {
-
+   echo
 }
 
 ## Remove Script
 function sbpremove {
-
+   echo
 }
 
 ### Actual Start of the User Interactive Script
