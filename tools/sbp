@@ -44,27 +44,9 @@ function sbout {
    echo
 }
 
-## ParamHandling - handle parameters and call the appropriate function
-function handleparams {
-   while getopts ":mirh:" option; do
-   case $option in
-      h) # display Help
-         echo "help page function"
-         exit
-	 ;;
-      m) # Make Script
-         sbpmake $1
-     \?) # Invalid option
-         echo "Error: Invalid option"
-         exit
-	 ;;
-   esac
-done
-}
-
 ## Make Script
 function sbpmake {
-   echo "."
+   echo $1
 }
 
 ## Install Script
@@ -83,5 +65,22 @@ clear
 
 sbout "Package Management Scripts-V$SBPVer"
 
-
-handleparams $1
+while getopts ":m:i:r:h" option; do
+   case $option in
+      h) # display Help
+         echo "help page function"
+         exit
+	 ;;
+      m) # Make Script
+         sbpmake $OPTARG
+         ;;
+      \?) # Invalid option
+         echo "Error: Invalid option"
+         exit
+	 ;;
+      :)
+         echo "$OPTARG: Requires an argument"
+         exit
+         ;;
+   esac
+done
