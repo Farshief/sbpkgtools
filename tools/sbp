@@ -1,8 +1,18 @@
 #!/bin/bash
 
+#####################
+##################### SBPkgTools
+##################### Written by Farshief
+##################### https://www.github.com/farshief/sbpkgtools
+#####################
+
 ### Variable Definitions
-
-
+SBPVer=1.0.0
+packagesDir=/packages
+pkgbuildpath=$packagesDir/build
+pkglogs=$pkgbuildpath/logs
+REPO_core=$packagesDir/repo/core
+Toolname="SBPkgTools"
 
 ### Function Definitions
 ## YAML Parsing
@@ -24,6 +34,16 @@ function parse_yaml {
    }'
 }
 
+## SBOut script - To print messages to the user in a standardized format
+function sbout {
+   local message=$1
+   echo
+   echo "*******"
+   echo "***$Toolname: $message"
+   echo "*******"
+   echo
+}
+
 ## Make Script
 function sbpmake {
 
@@ -38,3 +58,9 @@ function sbpinstall {
 function sbpremove {
 
 }
+
+### Actual Start of the User Interactive Script
+
+clear
+
+sbout "Package Management Scripts-V$SBPVer"

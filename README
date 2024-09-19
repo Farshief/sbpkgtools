@@ -1,6 +1,13 @@
 # SBPkgTools
 Simple Bash Package Management Tools (Designed for LFS)
 
+# Versioning
+I'm going to do my best to stick to 'Semantic Versioning 2.0.0' as described just below
+
+MAJOR - increment when making incompatible API changes
+MINOR - increment when adding functionality in a backward compatible manner
+PATCH - increment when making backward compatible bug fixes
+
 
 # Intro/About Me
 Let me start by saying that I've dabbled in coding enough to know my way around. By no means do I consider myself accomplished or experienced.

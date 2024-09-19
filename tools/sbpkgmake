@@ -89,7 +89,7 @@ echo "***$Toolname: Folder Located: $pkgconf"
 echo "*******"
 echo
 
-eval $(parse_yaml "$pkgconf/PKG" "PKGTOOLS_")								# Parse PKG file											# Set FAKEROOT (src) Directory
+eval $(parse_yaml "$pkgconf/PKG" "PKGTOOLS_")								# Parse PKG file
 
 # Package name is $PKGTOOLS_name
 # Version is $PKGTOOLS_version
