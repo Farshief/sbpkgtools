@@ -44,6 +44,11 @@ function sbout {
    echo
 }
 
+## Help Script
+function help {
+   echo "sbp help"
+}
+
 ## Make Script
 function sbpmake {
    echo $1
@@ -61,15 +66,14 @@ function sbpremove {
 
 ### Actual Start of the User Interactive Script
 
-clear
-
-sbout "Package Management Scripts-V$SBPVer"
-
 
 ## Parameter Handling
 #***Reformat tabbing here in kate
-while getopts ":m:i:r:h" option; do
+while getopts ":vm:i:r:-:" option; do
    case $option in
+      v) # Print Version
+	 sbout "Package Management Scripts-V$SBPVer"
+         ;;
       m) # Make Script
          sbpmake $OPTARG
          ;;
@@ -79,16 +83,25 @@ while getopts ":m:i:r:h" option; do
       r) # Remove Script
          sbpremove $OPTARG
          ;;
-      h) # display Help
-         echo "help page function"
-         exit
+      -) # Parse Long Options
+         case "${OPTARG}" in
+            version) # Print Version
+	       sbout "Package Management Scripts-V$SBPVer"
+       	       ;;
+	    *) # Invalid Long Option
+	       echo "sbp: invalid option '--$OPTARG'"
+	       echo "Try 'sbp --help' for more information"
+	       ;;
+   	 esac
 	 ;;
       \?) # Invalid option
-         echo "Error: Invalid option"
+         echo "sbp: invalid option '-$OPTARG'"
+	 echo "Try 'sbp --help' for more information"
          exit
 	 ;;
       :)
-         echo "$OPTARG: Requires an argument"
+         echo "sbp: option '-$OPTARG' requires an argument"
+	 echo "Try 'sbp --help' for more information"
          exit
          ;;
    esac
