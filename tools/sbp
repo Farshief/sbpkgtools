@@ -94,25 +94,31 @@ while getopts ":vm:i:r:h-:" option; do
          case "${OPTARG}" in
             version) # Print Version
 	       sbout "Package Management Scripts-V$SBPVer"
+	       exit
        	       ;;
+	    make) # Make Script
+	       sbpmake #$?
+	       ;;
 	    help) # Help Function
 	       help
+	       exit
 	       ;;
 	    *) # Invalid Long Option
 	       echo "sbp: invalid option '--$OPTARG'"
 	       echo "Try 'sbp -h | --help' for more information"
+	       exit 2
 	       ;;
    	 esac
 	 ;;
       \?) # Invalid option
          echo "sbp: invalid option '-$OPTARG'"
 	 echo "Try 'sbp -h | --help' for more information"
-         exit
+         exit 2
 	 ;;
       :)
          echo "sbp: option '-$OPTARG' requires an argument"
 	 echo "Try 'sbp -h | --help' for more information"
-         exit
+         exit 2
          ;;
    esac
 done
