@@ -7,7 +7,7 @@
 #####################
 
 ### Variable Definitions
-SBPVer=1.0.1
+SBPVer=1.2.0
 packagesDir=/packages
 pkgbuildpath=$packagesDir/build
 pkglogs=$pkgbuildpath/logs
