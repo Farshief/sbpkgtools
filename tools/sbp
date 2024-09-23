@@ -46,10 +46,20 @@ function sbout {
 
 ## Help Script
 function help {
-   echo "sbp"
-   echo
    echo "Usage:"
-   echo "    sbp -{m|i|r} <package>"
+   echo "    sbp {-m|-i|-r} package_name"
+   echo "    sbp {--make|--install|--remove} package_name"
+   echo "    sbp [-v|-h|--version|--help]"
+   echo
+   echo "$Toolname: Simple Bash Package Management Tools (Designed for LFS)"
+   echo "This script needs build scripts to function and is designed to take one option at a time"
+   echo
+   echo "Options:"
+   echo "    -v, --version	Prints the current script version"
+   echo "    -m, --make		Runs Build Script and creates package for installation"
+   echo "    -i, --install	Installs a built package to an LFS system"
+   echo "    -r, --remove	Removes an installed package from an LFS system"
+   echo "    -h, --help		Prints this help message"
 }
 
 ## Make Script
@@ -72,19 +82,29 @@ function sbpremove {
 
 ## Parameter Handling
 #***Reformat tabbing here in kate
+if [ $# -eq 0 ] # If no args are passed display help
+    then
+        help
+        exit 2
+fi
+
 while getopts ":vm:i:r:h-:" option; do
    case $option in
       v) # Print Version
 	 sbout "Package Management Scripts-V$SBPVer"
+	 exit
          ;;
       m) # Make Script
          sbpmake $OPTARG
+	 exit
          ;;
       i) # Install Script
          sbpinstall $OPTARG
+	 exit
          ;;
       r) # Remove Script
          sbpremove $OPTARG
+	 exit
          ;;
       h) # Help Function
 	 help
@@ -97,7 +117,16 @@ while getopts ":vm:i:r:h-:" option; do
 	       exit
        	       ;;
 	    make) # Make Script
-	       sbpmake #$?
+	       sbpmake $2
+	       exit
+	       ;;
+	    install) # Install Script
+	       sbpinstall $2
+	       exit
+	       ;;
+	    remove) # Remove Script
+	       sbpremove $2
+	       exit
 	       ;;
 	    help) # Help Function
 	       help
@@ -105,19 +134,19 @@ while getopts ":vm:i:r:h-:" option; do
 	       ;;
 	    *) # Invalid Long Option
 	       echo "sbp: invalid option '--$OPTARG'"
-	       echo "Try 'sbp -h | --help' for more information"
+	       help
 	       exit 2
 	       ;;
    	 esac
 	 ;;
       \?) # Invalid option
          echo "sbp: invalid option '-$OPTARG'"
-	 echo "Try 'sbp -h | --help' for more information"
+	 help
          exit 2
 	 ;;
       :)
          echo "sbp: option '-$OPTARG' requires an argument"
-	 echo "Try 'sbp -h | --help' for more information"
+	 help
          exit 2
          ;;
    esac
