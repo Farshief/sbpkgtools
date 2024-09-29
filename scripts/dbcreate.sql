@@ -8,7 +8,8 @@ BEGIN TRANSACTION;
 CREATE TABLE packages(
 	pid	INTEGER,
 	name	TEXT,
- 	version	TEXT
+ 	version	TEXT,
+	usesLib TEXT
 );
 
 COMMIT;
