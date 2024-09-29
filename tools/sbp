@@ -13,6 +13,7 @@ pkgbuildpath=$packagesDir/build
 pkglogs=$pkgbuildpath/logs
 REPO_core=$packagesDir/repo/core
 Toolname="SBPkgTools"
+DBpath=$packagesDir/packages.db
 
 ### Function Definitions
 ## YAML Parsing
@@ -43,6 +44,8 @@ function sbout {
    echo "*******"
    echo
 }
+
+## DBWrite - Add new entry to DB
 
 ## Help Script
 function help {
